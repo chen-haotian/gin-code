@@ -441,5 +441,292 @@ postman发起post请求，具体配置如下：
 - application/xml
 - multipart/form-data
 
-Gin可以通过Context.
+Gin可以通过Context.PostForm()来获取form表单提交过来的参数。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>form表单</title>
+</head>
+<body>
+    <form action="http://127.0.0.1:8000/form" method="post" action="application/x-www-form-urlencoded">
+      用户名：<input type="text" name="UserName" placeholder="请输入你的用户名">  <br>
+      密&nbsp;&nbsp;&nbsp;码：<input type="password" name="Password" placeholder="请输入你的密码">  <br>
+      <input type="submit" value="提交">
+    </form>
+</body>
+</html>
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	/*
+		form表单参数
+		使用context.PostForm()来接收form表单提交过来的参数
+	*/
+
+	// 创建engine
+	engine := gin.Default()
+	// 处理post请求
+	engine.POST("/form", func(context *gin.Context) {
+		UserName := context.PostForm("UserName")
+		Password := context.PostForm("Password")
+		fmt.Println(UserName, Password)
+		// 响应请求
+		context.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "success",
+			"data":    UserName + "登录成功!",
+		})
+	})
+	// engine启动
+	engine.Run(":8000")
+}
+```
+
+运行结果：
+
+<img src="asstes/image-20221216125818864.png" alt="image-20221216125818864" style="zoom:50%;" />
+
+<img src="asstes/image-20221216125832757.png" alt="image-20221216125832757" style="zoom:50%;" />
+
+### 4.8 文件上传
+
+单个文件上传，使用http请求的post方式multipart/form-data格式用于文件上传。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文件上传（单个文件）</title>
+</head>
+<body>
+    <form action="http://127.0.0.1:8000/upload" method="post" enctype="multipart/form-data">
+      上传文件:<input type="file" name="file" >
+      <input type="submit" value="提交">
+    </form>
+</body>
+</html>
+```
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"path"
+)
+
+func main() {
+	/*
+		当个文件上传
+		可以使用context.FormFile()来接收post提交的参数
+	*/
+
+	// 创建engine实例
+	engine := gin.Default()
+	// 限制上传文件大小为
+	engine.MaxMultipartMemory = 8 << 20 // 8Mb
+	// 处理post请求提交的数据
+	engine.POST("/upload", func(context *gin.Context) {
+		// 用于接收file
+		file, err := context.FormFile("file")
+		// 用于拼接文件上传的路径
+		dst := path.Join("./gin-route/file/" + file.Filename)
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": "failed",
+			})
+      return
+		}
+		err = context.SaveUploadedFile(file, dst)
+		// 上传成功响应
+		context.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "success",
+		})
+	})
+	// 启动engine
+	engine.Run(":8000")
+}
+```
+
+多文件上传案例
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文件上传（多个文件）</title>
+</head>
+<body>
+    <form action="http://127.0.0.1:8000/upload" method="post" enctype="multipart/form-data">
+      上传文件:<input type="file" name="files" multiple>
+      <input type="submit" value="提交">
+    </form>
+</body>
+</html>
+```
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"path"
+)
+
+func main() {
+	/*
+		多文件上传
+	*/
+	// 创建engine实例
+	engine := gin.Default()
+	// 限制表单上传大小 8MB，默认为32MB
+	engine.MaxMultipartMemory = 8 << 20
+	engine.POST("/upload", func(context *gin.Context) {
+		multipartForm, err := context.MultipartForm()
+		if err != nil {
+			// 文件读取失败的响应
+			context.JSON(http.StatusBadRequest, gin.H{
+				"code":    400,
+				"message": "filed",
+			})
+			return
+		}
+		// 获取所有图片
+		files := multipartForm.File["files"]
+		// 遍历所有图片
+		for _, file := range files {
+			// 按照指定路径存储图片
+			dst := path.Join("./gin-route/file/" + file.Filename)
+			if err := context.SaveUploadedFile(file, dst); err != nil {
+				context.JSON(http.StatusBadRequest, gin.H{
+					"code":    400,
+					"message": "filed",
+				})
+			}
+		}
+		// 上传成功响应
+		context.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "success",
+		})
+	})
+	// 启动engine
+	engine.Run(":8000")
+}
+```
+
+### 4.9 路由组
+
+路由组route group可以将接口路由功能分组管理。
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	/*
+		路由组
+		相同路由接口的可以放在同一个路由组下
+	*/
+
+	// 创建默认的engine实例
+	engine := gin.Default()
+	v1 := engine.Group("v1")
+	v2 := engine.Group("v2")
+
+	{
+		v1.GET("/i1", Info)
+		v1.POST("/i2", Hello)
+	}
+
+	{
+		v2.GET("/i1", Info)
+		v2.POST("/i2", Hello)
+	}
+	// 启动engine
+	engine.Run(":8000")
+}
+
+func Info(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "success",
+	})
+}
+
+func Hello(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    200,
+		"message": "success",
+		"data":    "hello world",
+	})
+}
+```
+
+### 4.10 404页面设置
+
+```go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func main() {
+	/*
+		gin设置找不到路由之后的404页面
+	*/
+
+	// 创建engine
+	engine := gin.Default()
+	// 处理get请求
+	engine.GET("/user", func(context *gin.Context) {
+		//
+		name := context.DefaultQuery("name", "zhangsan")
+		context.JSON(http.StatusOK, gin.H{
+			"code":    200,
+			"message": "success",
+			"data":    name,
+		})
+	})
+	// 设置找不到对应的路由后
+	engine.NoRoute(func(context *gin.Context) {
+		context.JSON(http.StatusNotFound, gin.H{
+			"code":    404,
+			"message": "404 not found",
+		})
+	})
+	// 启动engine
+	engine.Run(":8000")
+}
+```
 
