@@ -14,7 +14,7 @@ func main() {
 	*/
 	// 创建默认engine
 	engine := gin.Default()
-	// Handle方法处理get请求
+	// Handle方法处理post请求
 	engine.Handle("POST", "/hello", func(context *gin.Context) {
 		// PostForm()可以解析POST请求Body携带的参数
 		name := context.PostForm("name")

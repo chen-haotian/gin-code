@@ -15,7 +15,7 @@ func main() {
 	// get请求
 	engine.GET("/student", func(context *gin.Context) {
 		// DefaultQuery()
-		name := context.DefaultQuery("name", "zhangsan")
+		name := context.DefaultQuery("name", "张三")
 		context.JSON(http.StatusOK, gin.H{
 			"code":    200,
 			"message": "get success",

@@ -4,7 +4,7 @@
 
 Gin是使用Go（Golang）语言编写的Web框架，由于httprouter，它具有类似 martini-like API，性能提高了40倍。如果你需要高性能和高生产力，你会喜欢上Gin。
 
-<img src="asstes/gin_logo.png" alt="gin_logo" style="zoom: 10%;" />
+<img src="assets/gin_logo.png" alt="gin_logo" style="zoom: 10%;" />
 
 ## 二、安装Gin
 
@@ -16,7 +16,7 @@ Gin是使用Go（Golang）语言编写的Web框架，由于httprouter，它具�
 go get -u github.com/gin-gonic/gin
 ```
 
-2. 将其倒入项目或者代码中：
+2. 将其导入项目或者代码中：
 
 ```shell
 import "github.com/gin-gonic/gin"
@@ -56,7 +56,9 @@ func main() {
 }
 ```
 
-<img src="asstes/image-20221211155042002.png" alt="image-20221211155042002" style="zoom:50%;" />
+使用postman发送get请求。
+
+![image-20221226024313676](assets/image-20221226024313676.png)
 
 ## 四、Gin路由
 
@@ -77,16 +79,14 @@ func main() {
 		第一种：使用gin.Default()
 		第二种：使用gin.New()
 	*/
-	engine1 := gin.Default()
-	engine1.Run(":8000")
-	//engine2 := gin.New()
-  //engine2.Run(":8000")
+	engine := gin.Default()
+	engine.Run(":8000")
 }
 ```
 
 使用`gin.Default()`创建Engine的日志信息如下：
 
-<img src="asstes/image-20221211155254654.png" alt="image-20221211155254654" style="zoom:50%;" />
+![image-20221226024737653](assets/image-20221226024737653.png)
 
 ```go
 package main
@@ -99,30 +99,28 @@ func main() {
 		第一种：使用gin.Default()
 		第二种：使用gin.New()
 	*/
-	//engine1 := gin.Default()
-	//engine1.Run(":8000")
-	engine2 := gin.New()
-  engine2.Run(":8000")
+	engine := gin.New()
+	engine.Run(":8000")
 }
 ```
 
 使用`gin.New()`创建Engine的日志如下：
 
-<img src="asstes/image-20221211155547259.png" alt="image-20221211155547259" style="zoom:50%;" />
+![image-20221226024844451](assets/image-20221226024844451.png)
 
 使用`gin.Default()`和`gin.New()`创建Engine的区别就在于使用`gin.Default()`创建的Engine会默认使用Logger和Recovery这个两个中间件。
 
 Logger中间件是负责进行打印并输出日志的中间件，方便开发者进行程序调试；Recovery中间件的作用是如果程序执行过程中遇到panic中断信号，则Recovery中间件会恢复Go应用程序的执行，并返回服务器500内部错误，通常情况下，我们都是使用`gin.Default()`来创建Engine实例的。
 
-### 4.2 http请求类型
+### 4.2 http请求
 
-http请求中一共定义了8种方法或者称为8种http请求类型来表明对网络资源（Request-URI）的不同操作方式，分别是：OPTIONS、HEAD、GET、POST、PUT、DELETE、TRACE、CONNECT。
+http请求中一共定义了8种方法或者称为8种http请求类型来表明对网络资源（request-uri）的不同操作方式，分别是：OPTIONS、HEAD、GET、POST、PUT、DELETE、TRACE、CONNECT。
 
-一共有8种HTTP请求，但是实际开发中常用就：GET、POST、PUT、DELETE这几种HTTP请求。
+一共有8种HTTP请求，但是实际开发中常用就：get、post、put、delete这几种HTTP请求。
 
 ### 4.3 通用请求处理
 
-Engine实例中可以对http请求进行处理。在Engine实例中可以使用Handle()方法对HTTP请求进行处理。
+Engine实例中可以对http请求进行处理。在Engine实例中可以使用Handle()方法对http请求进行处理。
 
 Handle()方法源码如下：
 
@@ -167,7 +165,6 @@ func main() {
 			第二个参数：表示解析的接口路径URI
 			第三个参数：表示处理对应的请求的函数
 	*/
-
 	// Handle()通用处理请求处理get请求
 	// 创建默认engine
 	engine := gin.Default()
@@ -178,7 +175,7 @@ func main() {
 		fmt.Println(path) // 输出结果：/hello
 		// 获取到请求拼接在uri上的参数，例如http://127.0.0.1:8080?name=zhangsan
 		// 获取的参数不为nil就返回获取到的数据，否则就返回，参数二设置的defaultValue()的默认值
-		query := context.DefaultQuery("name", "zhangsan")
+		query := context.DefaultQuery("name", "张三")
 		// 响应请求
 		context.JSON(http.StatusOK, gin.H{
 			"code":    200,
@@ -193,11 +190,11 @@ func main() {
 
 使用postman发起get请求，具体配置如下：
 
-<img src="asstes/image-20221211171628272.png" alt="image-20221211171628272" style="zoom:50%;" />
+![image-20221226025140916](assets/image-20221226025140916.png)
 
 要是没有携带参数就使用默认的参数，要是携带参数就使用携带的参数。
 
-<img src="asstes/image-20221211171723509.png" alt="image-20221211171723509" style="zoom:50%;" />
+![image-20221226025210208](assets/image-20221226025210208.png)
 
 处理POST请求示例代码：
 
@@ -218,7 +215,7 @@ func main() {
 	*/
 	// 创建默认engine
 	engine := gin.Default()
-	// Handle方法处理get请求
+	// Handle方法处理post请求
 	engine.Handle("POST", "/hello", func(context *gin.Context) {
 		// PostForm()可以解析POST请求Body携带的参数
 		name := context.PostForm("name")
@@ -239,7 +236,7 @@ func main() {
 
 使用postman发生post请求，具体配置如下：
 
-<img src="asstes/image-20221211224320606.png" alt="image-20221211224320606" style="zoom:50%;" />
+![image-20221226031144500](assets/image-20221226031144500.png)
 
 上述案例，通过第一个参数指定解析POST的请求类型，第二个参数指定解析URI接口为`/hello`，POST请求是以form-data【表单】的方式提交数据的，可以通过`context.PostForm()`来获取表单中提交的数据内容，其他类型的http请求也可以通过`engine.Handle()`的方式来处理。
 
@@ -247,7 +244,7 @@ func main() {
 
 Engine实例除了有通用处理请求的Handle()方法外，还有按照http请求类型分类的方法，可以直接按照http请求的类型直接解析，例如Engine实例中的GET()、POST()、PUT()、DELETE()等与http请求类型对应的方法。
 
-GET请求代码示例：
+处理get请求代码示例：
 
 ```go
 package main
@@ -289,7 +286,7 @@ func main() {
 }
 ```
 
-POST请求代码示例：
+处理post请求代码示例：
 
 ```go
 package main
@@ -377,11 +374,11 @@ func main() {
 
 postman发起get请求，具体配置如下：
 
-<img src="asstes/image-20221212194745532.png" alt="image-20221212194745532" style="zoom:50%;" />
+![image-20221226145406844](assets/image-20221226145406844.png)
 
 postman发起post请求，具体配置如下：
 
-<img src="asstes/image-20221212194813794.png" alt="image-20221212194813794" style="zoom:50%;" />
+![image-20221226145428958](assets/image-20221226145428958.png)
 
 ### 4.6 解析URL上的参数
 
@@ -398,17 +395,17 @@ import (
 func main() {
 	// 创建engine实例
 	engine := gin.Default()
-	// get请求
+	// 处理get请求
 	engine.GET("/student", func(context *gin.Context) {
 		// DefaultQuery()
-		name := context.DefaultQuery("name", "zhangsan")
+		name := context.DefaultQuery("name", "张三")
 		context.JSON(http.StatusOK, gin.H{
 			"code":    200,
 			"message": "get success",
 			"data":    name + "登录成功!",
 		})
 	})
-	// post请求
+	// 处理post请求
 	engine.POST("/student", func(context *gin.Context) {
 		// Query()
 		name := context.Query("name")
@@ -424,17 +421,15 @@ func main() {
 
 postman发起get请求，具体配置如下：
 
-<img src="asstes/image-20221212214046390.png" alt="image-20221212214046390" style="zoom:50%;" />
-
-<img src="asstes/image-20221212214111850.png" alt="image-20221212214111850" style="zoom:50%;" />
+![image-20221226171148332](assets/image-20221226171148332.png)
 
 postman发起post请求，具体配置如下：
 
-<img src="asstes/image-20221212214625191.png" alt="image-20221212214625191" style="zoom:50%;" />
+![image-20221226171217017](assets/image-20221226171217017.png)
 
 ### 4.7 表单参数
 
-表单传输为post请求，常见的传输格式为4种
+表单传输为post请求，常见的传输格式为4种：
 
 - application/json
 - application/x-www-form-urlencoded
@@ -496,11 +491,9 @@ func main() {
 }
 ```
 
-运行结果：
+通过浏览器发起http请求，结果如下：
 
-<img src="asstes/image-20221216125818864.png" alt="image-20221216125818864" style="zoom:50%;" />
-
-<img src="asstes/image-20221216125832757.png" alt="image-20221216125832757" style="zoom:50%;" />
+![image-20221226171431497](assets/image-20221226171431497.png)
 
 ### 4.8 文件上传
 
